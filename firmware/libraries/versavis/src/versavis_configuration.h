@@ -13,7 +13,7 @@
 
 /* ----- Camera configuration ----*/
 // Camera 0
-#define CAM0_TOPIC "/versavis/cam0/"
+#define CAM0_TOPIC ""
 #define CAM0_RATE 20
 #define CAM0_TYPE trigger_type::NON_INVERTED
 #define CAM0_TRIGGER_PIN 14
@@ -39,6 +39,14 @@
 #define USE_ADIS16448BMLZ
 #define IMU_TOPIC "/versavis/imu_micro"
 #define IMU_RATE 200
+
+/* ----- LRF -----*/
+#define USE_LRF
+#define LRF_TOPIC "/versavis/lrf_range"
+#define LRF_TOPIC_debug "/versavis/lrf_nmea"
+#define LRF_INTERRUPT 31
+#define LRF_SERIAL_PORT Serial1
+
 
 /* ----- Additional triggers ----- */
 // Define whether additional test outputs should be used.

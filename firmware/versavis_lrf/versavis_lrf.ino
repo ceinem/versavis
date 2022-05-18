@@ -25,13 +25,7 @@
 
 
 
-
-
-
 static void resetCb(const std_msgs::Bool & /*msg*/) { NVIC_SystemReset(); }
-
-
-
 
 
 #ifdef ILLUMINATION_MODULE
@@ -140,10 +134,10 @@ void setup() {
 
 
     nh.spinOnce();
-#endif
-    delay(1000);
-  //}
 
+    delay(1000);
+  }
+#endif
   /* -----  Declare timers ----- */
   // Enable TCC1 and TCC2 timers.
   REG_GCLK_CLKCTRL = static_cast<uint16_t>(

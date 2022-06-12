@@ -37,13 +37,14 @@
 // Possible values: USE_ADIS16445, USE_ADIS16448AMLZ, USE_ADIS16448BMLZ,
 // USE_ADIS16460 and USE_VN100
 #define USE_ADIS16448BMLZ
+// #define IMU_TOPIC ""
 #define IMU_TOPIC "/versavis/imu_micro"
 #define IMU_RATE 200
 
 /* ----- LRF -----*/
 #define USE_LRF
 #define LRF_TOPIC "/versavis/lrf_range"
-#define LRF_TOPIC_debug "/versavis/lrf_nmea"
+#define LRF_TOPIC_DEBUG "/versavis/lrf_nmea"
 #define LRF_INTERRUPT 31
 #define LRF_SERIAL_PORT Serial1
 

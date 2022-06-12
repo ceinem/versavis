@@ -116,7 +116,7 @@ void setup() {
 
   DEBUG_PRINTLN(F("Main: Start setup."));
 
-  //imu.setup();
+  imu.setup();
   cam0.setup();
   cam1.setup();
   cam2.setup();
@@ -167,7 +167,7 @@ void setup() {
   NVIC_EnableIRQ(TC3_IRQn);
   NVIC_EnableIRQ(TC5_IRQn);
 
-  //imu.begin();
+  imu.begin();
   cam0.begin();
   cam1.begin();
   cam2.begin();
@@ -196,7 +196,7 @@ void loop() {
   cam0.publish();
   cam1.publish();
   cam2.publish();
-  //imu.publish();
+  imu.publish();
 
 #ifdef USE_LRF
   while (lrf0.serial_port_->available() > 0) {
@@ -227,7 +227,7 @@ void TC3_Handler() { // Called by cam2_timer for camera 2 trigger.
 }
 
 void TC5_Handler() { // Called by imu_timer for imu trigger.
-  //imu.triggerMeasurement();
+  imu.triggerMeasurement();
 }
 
 void exposureEnd0() {

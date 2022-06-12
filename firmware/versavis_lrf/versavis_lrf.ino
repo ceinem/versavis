@@ -25,7 +25,9 @@
 
 
 
-static void resetCb(const std_msgs::Bool & /*msg*/) { NVIC_SystemReset(); }
+static void resetCb(const std_msgs::Bool & /*msg*/) {
+  NVIC_SystemReset();
+}
 
 
 #ifdef ILLUMINATION_MODULE
@@ -77,13 +79,13 @@ Camera cam2(&nh, CAM2_TOPIC, CAM2_RATE, timer_cam2, CAM2_TYPE, CAM2_TRIGGER_PIN,
 
 /* ----- Other Sensors ----- */
 #ifdef USE_LRF
-Lrf lrf0(&nh, LRF_TOPIC, LRF_TOPIC_debug, LRF_INTERRUPT, &LRF_SERIAL_PORT);
+Lrf lrf0(&nh, LRF_TOPIC, LRF_TOPIC_DEBUG, LRF_INTERRUPT, &LRF_SERIAL_PORT);
 #endif
 
 void setup() {
   DEBUG_INIT(115200);
 
-/* ----- Define pins and initialize. ----- */
+  /* ----- Define pins and initialize. ----- */
 #ifdef ADD_TRIGGERS
   pinMode(ADDITIONAL_TEST_PIN, OUTPUT);
   digitalWrite(ADDITIONAL_TEST_PIN, LOW);
@@ -98,7 +100,7 @@ void setup() {
 
   delay(1000);
 
-/* ----- ROS ----- */
+  /* ----- ROS ----- */
 #ifndef DEBUG
   nh.getHardware()->setBaud(250000);
   nh.initNode();
@@ -114,7 +116,7 @@ void setup() {
 
   DEBUG_PRINTLN(F("Main: Start setup."));
 
-  imu.setup();
+  //imu.setup();
   cam0.setup();
   cam1.setup();
   cam2.setup();
@@ -141,20 +143,20 @@ void setup() {
   /* -----  Declare timers ----- */
   // Enable TCC1 and TCC2 timers.
   REG_GCLK_CLKCTRL = static_cast<uint16_t>(
-      GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC0_TCC1);
+                       GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC0_TCC1);
   while (GCLK->STATUS.bit.SYNCBUSY == 1) {
     ; // wait for sync
   }
   // Enable TCC2 (not used) and TC3 timers.
   REG_GCLK_CLKCTRL = static_cast<uint16_t>(
-      GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC2_TC3);
+                       GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TCC2_TC3);
   while (GCLK->STATUS.bit.SYNCBUSY == 1) {
     ; // wait for sync
   }
 
   // Enable TC4 (not used) and TC5 timers.
   REG_GCLK_CLKCTRL = static_cast<uint16_t>(
-      GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TC4_TC5);
+                       GCLK_CLKCTRL_CLKEN | GCLK_CLKCTRL_GEN_GCLK0 | GCLK_CLKCTRL_ID_TC4_TC5);
   while (GCLK->STATUS.bit.SYNCBUSY == 1) {
     ; // wait for sync
   }
@@ -165,7 +167,7 @@ void setup() {
   NVIC_EnableIRQ(TC3_IRQn);
   NVIC_EnableIRQ(TC5_IRQn);
 
-  imu.begin();
+  //imu.begin();
   cam0.begin();
   cam1.begin();
   cam2.begin();
@@ -194,15 +196,17 @@ void loop() {
   cam0.publish();
   cam1.publish();
   cam2.publish();
-  imu.publish();
+  //imu.publish();
 
 #ifdef USE_LRF
-  lrf0.publish();
-  while(lrf0.serial_port_->available() > 0){
+  while (lrf0.serial_port_->available() > 0) {
     int incoming = lrf0.serial_port_->read();
-    DEBUG_PRINTLN(incoming);
+    //    DEBUG_PRINTLN(incoming);
+
     lrf0 << incoming;
   }
+  lrf0.publishDebug();
+  lrf0.publish();
 #endif
 
 #ifndef DEBUG
@@ -223,7 +227,7 @@ void TC3_Handler() { // Called by cam2_timer for camera 2 trigger.
 }
 
 void TC5_Handler() { // Called by imu_timer for imu trigger.
-  imu.triggerMeasurement();
+  //imu.triggerMeasurement();
 }
 
 void exposureEnd0() {
@@ -258,7 +262,7 @@ void exposureEnd2() {
 
 void lrfChange() {
   if(digitalRead(lrf0.interruptPin()) == HIGH){
-    lrf0.exposureEnd();
+   lrf0.exposureEnd();
   } else {
     lrf0.exposureBegin();
   }

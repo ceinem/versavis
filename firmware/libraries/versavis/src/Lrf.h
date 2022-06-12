@@ -51,7 +51,6 @@ public:
   void snlrfHandler();
 
   Uart *serial_port_;
-  // NMEAParser<3> parser_;
 
 
   void operator<<(char inChar);
@@ -66,8 +65,12 @@ protected:
 
 
 private:
-  ros::Time timestamp_;
-  bool new_measurement_available_;
+  ros::Time timestamp_begin_;
+  ros::Time timestamp_end_;
+  bool new_measurement_available_1_;
+  bool new_measurement_available_2_;
+  bool new_measurement_available_3_;
+  bool new_sentence_available_;
   // Message to save sequence number and timestamp.
   lrf_msgs::Laser laser_msgs_;
   // lrf_msgs::Nmea nmea_srv_;
@@ -80,7 +83,7 @@ private:
 
 
 
-  void sendCmd(const char *input_array, int array_size);
+  void sendCmd(const char *input_array);
 
 
   // Parser
@@ -113,10 +116,14 @@ private:
   char mBuffer[kSentenceMaxSize];
   static int8_t hexToNum(const char inChar);
   int8_t getHandler(const char *inToken);
-  uint8_t startArgPos(uint8_t inArgNum)
-  {
-    return mBuffer[kSentenceMaxSize - 1 - inArgNum];
-  }
+  uint8_t argCount();
+  uint8_t endArgPos(uint8_t inArgNum);
+  bool validArgNum(uint8_t inArgNum);
+  bool getArg(uint8_t num, char &arg);
+  bool getArg(uint8_t num, char *arg);
+  bool getArg(uint8_t num, int &arg);
+  bool getArg(uint8_t num, float &arg);
+  uint8_t startArgPos(uint8_t inArgNum);
   static bool strnwcmp(const char *s1, const char *s2, uint8_t len)
   {
     while (len-- > 0) {
@@ -126,7 +133,6 @@ private:
     }
     return true;
   }
-  // void Stringify();
 
 //   // Flag whether the camera should perform exposure compensation and is
 //   // currently in compensating mode (see Nikolic 2014).

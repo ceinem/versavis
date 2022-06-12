@@ -24,15 +24,21 @@ Lrf::Lrf(ros::NodeHandle *nh, const String &topic, const String &topic_debug,
            publisher_debug_((topic_debug + "img_time").c_str(), &sentence_msgs_),
            interrupt_pin_(interrupt_pin), serial_port_(serial_port),
            nmeaSubscriber_((topic_debug + "_cmd").c_str(), &Lrf::nmeaCallback, this),
-           new_measurement_available_(false), initialized_(false){
+           new_measurement_available_1_(false), new_measurement_available_2_(false),
+           new_measurement_available_3_(false), new_sentence_available_(false),
+           initialized_(false){
 
   // Check the input.
   if (interrupt_pin == 0) {
     error((topic + " (Lrf.cpp): Interrupt pin is not set.").c_str(), 10);
   }
-  DEBUG_PRINTLN(
-      F("Test"));
+  // DEBUG_PRINTLN(
+  //     F("Test"));
   // Sensor::newMeasurementIsNotAvailable();
+  new_measurement_available_1_ = false;
+  new_measurement_available_2_ = false;
+  new_measurement_available_3_ = false;
+  new_sentence_available_ = false;
 }
 
 void Lrf::setup() {
@@ -49,17 +55,96 @@ void Lrf::setup() {
   setupPublisher();
   setupPublisherDebug();
   setupNMEASubscriber();
+  // //
+  // // pinMode(trigger_pin_, OUTPUT);
+  // // digitalWrite(trigger_pin_, LOW);
+  // pinMode(interrupt_pin_, INPUT);
   //
-  // pinMode(trigger_pin_, OUTPUT);
-  // digitalWrite(trigger_pin_, LOW);
-  pinMode(interrupt_pin_, INPUT);
-
   serial_port_->begin(38400);
 
-  // parser_.setErrorHandler(Lrf::errorHandler);
-  // // parser_.addHandler("CCSNQ", firstHandler);
-  // parser_.addHandler("PNCOS", Lrf::pncosHandler);
-  // parser_.addHandler("SNLRF", Lrf::snlrfHandler);
+}
+
+
+uint8_t Lrf::argCount()
+{
+  return kSentenceMaxSize - mArgIndex - 1;
+}
+
+uint8_t Lrf::startArgPos(uint8_t inArgNum)
+{
+  return mBuffer[kSentenceMaxSize - 1 - inArgNum];
+}
+
+uint8_t Lrf::endArgPos(uint8_t inArgNum)
+{
+  return mBuffer[kSentenceMaxSize - 2 - inArgNum];
+}
+
+bool Lrf::validArgNum(uint8_t inArgNum)
+{
+  return inArgNum < (kSentenceMaxSize - mArgIndex);
+}
+
+bool Lrf::getArg(uint8_t num, char *arg)
+{
+  if (validArgNum(num)) {
+    uint8_t startPos = startArgPos(num);
+    uint8_t endPos = endArgPos(num);
+    {
+      char mTmp = mBuffer[endPos];
+      mBuffer[endPos] = '\0';
+      // NMEAParserStringify stfy(this, endPos);
+      strcpy(arg, &mBuffer[startPos]);
+      mBuffer[endPos] = mTmp;
+    }
+    return true;
+  }
+  else return false;
+}
+
+bool Lrf::getArg(uint8_t num, char &arg)
+{
+  if (validArgNum(num)) {
+    uint8_t startPos = startArgPos(num);
+    uint8_t endPos = endArgPos(num);
+    arg = mBuffer[startPos];
+    return (endPos - startPos) == 1;
+  }
+  else return false;
+}
+
+bool Lrf::getArg(uint8_t num, int &arg)
+{
+  if (validArgNum(num)) {
+    uint8_t startPos = startArgPos(num);
+    uint8_t endPos = endArgPos(num);
+    {
+      char mTmp = mBuffer[endPos];
+      mBuffer[endPos] = '\0';
+      // NMEAParserStringify stfy(this, endPos);
+      arg = atoi(&mBuffer[startPos]);
+      mBuffer[endPos] = mTmp;
+    }
+    return true;
+  }
+  else return false;
+}
+
+bool Lrf::getArg(uint8_t num, float &arg)
+{
+  if (validArgNum(num)) {
+    uint8_t startPos = startArgPos(num);
+    uint8_t endPos = endArgPos(num);
+    {
+      char mTmp = mBuffer[endPos];
+      mBuffer[endPos] = '\0';
+      // NMEAParserStringify stfy(this, endPos);
+      arg = atof(&mBuffer[startPos]);
+      mBuffer[endPos] = mTmp;
+    }
+    return true;
+  }
+  else return false;
 }
 
 void Lrf::errorHandler()
@@ -68,22 +153,115 @@ void Lrf::errorHandler()
   // SerialUSB.println(parser_.error());
   DEBUG_PRINTLN(
       F("ERROR"));
+      sentence_msgs_.sentence = mBuffer;
+      new_sentence_available_ = true;
 }
+
 void Lrf::pncosHandler()
 {
 DEBUG_PRINTLN(
     F("PNCOS"));
-  // SerialUSB.print("*** Error : ");
-  // SerialUSB.println(parser.error());
-  // this.sentence_msgs_.sentence = "Got a PNCOS msg";
-  // publishDebug();
+  DEBUG_PRINT(argCount());
+  DEBUG_PRINTLN(" arguments");
+  char arg0; // Power Quality
+  char arg1[3]; // Measurement Mode
+  char arg2; // unit distance
+  char arg3; //unit speed
+  char arg4[4]; //gate
+  char arg5[5]; //Target
+  int arg6;
+  char arg7; // Repetition rate
+  char arg8[3]; // Action time
+  char arg9[4]; // Idle time
+  if (getArg(0,arg0))
+  if (getArg(1,arg1))
+  if (getArg(2,arg2))
+  if (getArg(3,arg3))
+  if (getArg(4,arg4))
+  if (getArg(5,arg5))
+  if (getArg(6,arg6))
+  if (getArg(7,arg7))
+  if (getArg(8,arg8))
+  if (getArg(9,arg9))
+  //
+  // if(debug) {
+    DEBUG_PRINT("Power Quality: "); DEBUG_PRINTLN(arg0);
+    DEBUG_PRINT("Measurement Mode: "); DEBUG_PRINTLN(arg1);
+    DEBUG_PRINT("Distance unit: "); DEBUG_PRINTLN(arg2);
+    DEBUG_PRINT("Speed unit: "); DEBUG_PRINTLN(arg3);
+    DEBUG_PRINT("Distance gate: "); DEBUG_PRINTLN(arg4);
+    DEBUG_PRINT("Target selection: "); DEBUG_PRINTLN(arg5);
+    DEBUG_PRINT("??: "); DEBUG_PRINTLN(arg6);
+    DEBUG_PRINT("Repetition Mode: "); DEBUG_PRINTLN(arg7);
+    DEBUG_PRINT("Acion Time: "); DEBUG_PRINTLN(arg8);
+    DEBUG_PRINT("Idle Time: "); DEBUG_PRINTLN(arg9);
+  // }
+  sentence_msgs_.sentence = mBuffer;
+  new_sentence_available_ = true;
+
+
 }
+
+
 void Lrf::snlrfHandler()
 {
   DEBUG_PRINTLN(
       F("SNLRF"));
   // SerialUSB.print("*** Error : ");
   // SerialUSB.println(parser.error());
+  DEBUG_PRINT("Got $SNLRF with ");
+  DEBUG_PRINT(argCount());
+  DEBUG_PRINTLN(" arguments");
+  char arg0; // Power Quality
+  char arg1; // Result
+  char arg2; // Result type
+  float arg3; //Result 1
+  char arg4; //Result 1 Unit
+  char arg5; //Result 2 type
+  float arg6; //Result 2
+  char arg7; // Result 2 unit
+  char arg8; // Result 3 type
+  float arg9; // Result 3
+  char arg10; // Result 3 unit
+
+  if(argCount() > 0) {
+    getArg(0,arg0);
+    getArg(1,arg1);
+    getArg(2,arg2);
+    getArg(3,arg3);
+    getArg(4,arg4);
+    laser_msgs_.data = arg3;
+    new_measurement_available_1_ = true;
+  }
+  if(argCount() > 5) {
+    getArg(5,arg5);
+    getArg(6,arg6);
+    getArg(7,arg7);
+  }
+  if(argCount() > 8) {
+    getArg(8,arg8);
+    getArg(9,arg9);
+    getArg(10,arg10);
+  }
+
+
+
+    DEBUG_PRINT("Power Quality: "); DEBUG_PRINTLN(arg0);
+    DEBUG_PRINT("Result: "); DEBUG_PRINTLN(arg1);
+    DEBUG_PRINT("Res1 type: "); DEBUG_PRINTLN(arg2);
+    DEBUG_PRINT("Res1 value: "); DEBUG_PRINTLN(arg3);
+    DEBUG_PRINT("Res1 unit: "); DEBUG_PRINTLN(arg4);
+    DEBUG_PRINT("Res2 type: "); DEBUG_PRINTLN(arg5);
+    DEBUG_PRINT("Res2 value: "); DEBUG_PRINTLN(arg6);
+    DEBUG_PRINT("Res2 unit: "); DEBUG_PRINTLN(arg7);
+    DEBUG_PRINT("Res3 type: "); DEBUG_PRINTLN(arg8);
+    DEBUG_PRINT("Res3 value: "); DEBUG_PRINTLN(arg9);
+    DEBUG_PRINT("Res3 unit: "); DEBUG_PRINTLN(arg9);
+
+    sentence_msgs_.sentence = mBuffer;
+    new_sentence_available_ = true;
+
+
 }
 
 
@@ -147,22 +325,11 @@ int8_t Lrf::getHandler(const char *inToken)
 
 void Lrf::processSentence()
 {
-  /* Look for the token */
   uint8_t endPos = startArgPos(0);
   int8_t slot;
   {
-    // NMEAParserStringify stfy(this, endPos);
-    // String mBufferTok(this->mBuffer);
     slot = getHandler(this->mBuffer);
   }
-  // if (slot != -1) {
-  //   mHandlers[slot].mHandler();
-  // }
-  // else {
-  //   // if (mDefaultHandler != NULL) {
-  //   //   mDefaultHandler();
-  //   // }
-  // }
 }
 
 int8_t Lrf::hexToNum(const char inChar)
@@ -285,38 +452,38 @@ void Lrf::operator<<(char inChar) {
           break;
       }
 }
-
-
-
-// void Camera::initialize() {
-//   if (!is_configured_ || initialized_) {
-//     return;
-//   }
-//   DEBUG_PRINTLN((topic_ + " (Camera.cpp): Initialize.").c_str());
-//   Sensor::trigger(trigger_pin_, TRIGGER_PULSE_US * 10, type_);
-//   Sensor::setTimestampNow();
-//   ++image_number_;
-//   image_time_msg_.number = image_number_;
-//   Sensor::newMeasurementIsAvailable();
-//   publish();
-// #ifdef DEBUG
-//   initialized_ = true;
-// #endif
-// }
-
-// void Camera::begin() {
-//   if (!is_configured_) {
-//     return;
-//   }
-//   DEBUG_PRINTLN((topic_ + " (Camera.cpp): Begin.").c_str());
-//   // Maximal exposure time to still be able to keep up with the frequency
-//   // considering a security factor of 0.99, in us.
-//   max_exposure_time_us_ = 0.99 * 1e6 / rate_hz_;
 //
-//   // Setup timer to periodically trigger the camera.
-//   Sensor::setupTimer();
-// }
-
+//
+//
+// // void Camera::initialize() {
+// //   if (!is_configured_ || initialized_) {
+// //     return;
+// //   }
+// //   DEBUG_PRINTLN((topic_ + " (Camera.cpp): Initialize.").c_str());
+// //   Sensor::trigger(trigger_pin_, TRIGGER_PULSE_US * 10, type_);
+// //   Sensor::setTimestampNow();
+// //   ++image_number_;
+// //   image_time_msg_.number = image_number_;
+// //   Sensor::newMeasurementIsAvailable();
+// //   publish();
+// // #ifdef DEBUG
+// //   initialized_ = true;
+// // #endif
+// // }
+//
+// // void Camera::begin() {
+// //   if (!is_configured_) {
+// //     return;
+// //   }
+// //   DEBUG_PRINTLN((topic_ + " (Camera.cpp): Begin.").c_str());
+// //   // Maximal exposure time to still be able to keep up with the frequency
+// //   // considering a security factor of 0.99, in us.
+// //   max_exposure_time_us_ = 0.99 * 1e6 / rate_hz_;
+// //
+// //   // Setup timer to periodically trigger the camera.
+// //   Sensor::setupTimer();
+// // }
+//
 void Lrf::setupPublisher() {
   pub_topic_ = topic_;
   publisher_ = ros::Publisher(pub_topic_.c_str(), &laser_msgs_);
@@ -348,154 +515,59 @@ DEBUG_PRINTLN(F((" (Lrf.cpp): Setup NMEA subscriber")));
 
 void Lrf::nmeaCallback(const lrf_msgs::Sentence &msg)
 {
-  // sendCmd(msg.sentence, size_of(msg.sentence));
+  sendCmd(msg.sentence);
 }
 
-// void Camera::triggerMeasurement() {
-//   // Check whether an overflow caused the interrupt.
-//   if (!timer_.checkOverflow()) {
-//     DEBUG_PRINTLN(
-//         (topic_ + " (Camera.cpp): Timer interrupt but not overflown.").c_str());
-//     return;
-//   }
-//   if (!is_configured_ || !initialized_) {
-//     return;
-//   }
-//   DEBUG_PRINTLN((topic_ + " (Camera.cpp): Timer overflow.").c_str());
-//
-//   if (exposure_compensation_ && compensating_) {
-//     DEBUG_PRINTLN((topic_ + " (Camera.cpp): Compensating.").c_str());
-//     // Exposure-time compensating mode (Nikolic 2014). During exposure, the
-//     // timer will interrupt in the middle of the exposure time. At the end of
-//     // the exposure, the external interrupt will trigger exposureEnd() and
-//     // reset the timer to trigger the camera at the appropriate time.
-//     if (!exposing_) {
-//       DEBUG_PRINTLN(
-//           (topic_ + " (Camera.cpp): Not exposing. Trigger camera.").c_str());
-//       // The camera is currently not exposing meaning that the interrupt
-//       // triggers at the beginning of the next image.
-//       exposing_ = true;
-//
-// #ifdef ILLUMINATION_MODULE
-//       // If the illumination module is active, the LEDs should turn on just
-//       // before the camera is exposing.
-//       digitalWrite(ILLUMINATION_PIN, HIGH);
-//       // Here, a warm-up delay for the LEDs can be added (needs checking).
-//       // delayMicroseconds(10);
-// #endif
-//       // Trigger the actual pulse.
-//       Sensor::trigger(trigger_pin_, TRIGGER_PULSE_US, type_);
-//
-//       // Save the current time to estimate the exposure time in the pin
-//       // interrupt.
-//       exposure_start_us_ = micros();
-//
-//       // Increament the image number as the camera is triggered now.
-//       ++image_number_;
-//
-//       // Set the timer to the mid exposure point, e.g. half the exposure time.
-//       timer_.setCompare(exposure_delay_ticks_ > 0 ? exposure_delay_ticks_ - 1
-//                                                   : compare_);
-//     } else {
-//       DEBUG_PRINTLN(
-//           (topic_ + " (Camera.cpp): Exposing right now, get timestamp.")
-//               .c_str());
-//       // The camera is currently exposing. In this case, the interrupt is
-//       // triggered in the middle of the exposure time, where the timestamp
-//       // should be taken.
-//       Sensor::setTimestampNow();
-//       Sensor::newMeasurementIsAvailable();
-// #ifdef ADD_TRIGGERS
-//       trigger(ADDITIONAL_TEST_PIN, TRIGGER_PULSE_US,
-//               Sensor::trigger_type::NON_INVERTED);
-// #endif
-//
-//       // Even though we are still in the compensating mode, deactivating here
-//       // ensures that we detect if a exposure signal is dropped and we switch
-//       // to non-compensating mode.
-//       compensating_ = false;
-//
-//       // Set the timer to the standard period as we dont know the current
-//       // exposure time yet.
-//       timer_.setCompare(compare_);
-//     }
-//   } else {
-//     // "Standard" mode where the camera is triggered purely periodic.
-//     DEBUG_PRINTLN(
-//         (topic_ +
-//          " (Camera.cpp): Not compensating. Trigger camera and take timestamp.")
-//             .c_str());
-//     exposing_ = true;
-//
-// #ifdef ILLUMINATION_MODULE
-//     // Deactivate the LEDs as we are not sure yet whether we get an exposure
-//     // signal.
-//     digitalWrite(ILLUMINATION_PIN, LOW);
-// #endif
-//     // Trigger the actual pulse.
-//     Sensor::trigger(trigger_pin_, TRIGGER_PULSE_US, type_);
-//
-//     Sensor::setTimestampNow();
-//     Sensor::newMeasurementIsAvailable();
-//
-//     // Save the current time to estimate the exposure time in the pin
-//     // interrupt.
-//     exposure_start_us_ = micros();
-//
-//     // Increament the image number as the camera is triggered now.
-//     image_number_++;
-//
-//     // Set the timer to make sure that the camera is triggered in a periodic
-//     // mode.
-//     timer_.setCompare(compare_);
-//   }
-//   // Reset the timer.
-//   timer_.resetOverflow();
-// }
+
 
 void Lrf::exposureBegin() {
   DEBUG_PRINTLN((topic_ + " (Lrf.cpp): Exposure begin.").c_str());
-  // if (exposure_compensation_) {
-  //   unsigned long last_exposure_time_us = micros() - exposure_start_us_;
-  //   DEBUG_PRINT((topic_ + " (Camera.cpp): exposure time [us] ").c_str());
-  //   DEBUG_PRINTDECLN(last_exposure_time_us);
-  //   calculateDelayTicksAndCompensate(last_exposure_time_us);
-  //   exposing_ = false;
-  // }
+  timestamp_begin_ = nh_->now();
+  new_measurement_available_2_ = true;
 }
 
 void Lrf::exposureEnd() {
   DEBUG_PRINTLN((topic_ + " (Lrf.cpp): Exposure end.").c_str());
-  // if (exposure_compensation_) {
-  //   unsigned long last_exposure_time_us = micros() - exposure_start_us_;
-  //   DEBUG_PRINT((topic_ + " (Camera.cpp): exposure time [us] ").c_str());
-  //   DEBUG_PRINTDECLN(last_exposure_time_us);
-  //   calculateDelayTicksAndCompensate(last_exposure_time_us);
-  //   exposing_ = false;
-  // }
+  timestamp_end_ = nh_->now();
+  new_measurement_available_3_ = true;
 }
 
 void Lrf::publish() {
-//   if (Sensor::isNewMeasurementAvailable()) {
-//     DEBUG_PRINTLN((topic_ + " (Camera.cpp): Publish.").c_str());
+  if (new_measurement_available_1_ && new_measurement_available_2_ && new_measurement_available_3_) {
+    DEBUG_PRINTLN((topic_ + " (Lrf.cpp): Publish.").c_str());
 //     image_time_msg_.time = Sensor::getTimestamp();
 //     image_time_msg_.number = image_number_;
-// #ifndef DEBUG
-//     publisher_.publish(&image_time_msg_);
-// #endif
-//     Sensor::newMeasurementIsNotAvailable();
-//   }
+    laser_msgs_.stamp_start = timestamp_begin_;
+    float duration = (timestamp_end_- timestamp_begin_).toSec();
+    laser_msgs_.duration = duration;
+    if((nh_->now() - timestamp_end_).toSec() < 1.0) {
+
+    } else {
+      laser_msgs_.data = 33333.333;
+    }
+
+#ifndef DEBUG
+    publisher_.publish(&laser_msgs_);
+#endif
+    new_measurement_available_1_ = false;
+    new_measurement_available_2_ = false;
+    new_measurement_available_3_ = false;
+  }
 }
 
 void Lrf::publishDebug() {
+  if(new_sentence_available_) {
     DEBUG_PRINTLN((topic_ + " (Lrf.cpp): Publish debug.").c_str());
 #ifndef DEBUG
     publisher_debug_.publish(&sentence_msgs_);
 #endif
+    new_sentence_available_ = false;
+  }
 }
 
-void Lrf::sendCmd(const char *input_array, int array_size) {
-  int new_length = array_size + 4;
+void Lrf::sendCmd(const char *input_array) {
+  int array_size = strlen(input_array);
+  int new_length = array_size + 8;
   char output_array[new_length];
 
 
@@ -503,45 +575,20 @@ void Lrf::sendCmd(const char *input_array, int array_size) {
   output_array[ind] = '$';
 
   int mComputedCRC = 0;
-  for(int i = 0; i < array_size-1; i++){
+  for(int i = 0; i < array_size; i++){
     char inChar = input_array[i];
     ind++;
     output_array[ind] = inChar;
     mComputedCRC ^= inChar;
   }
+
   ind++;
   output_array[ind] = '*';
   output_array[ind+1] = String(mComputedCRC,HEX)[0];
   output_array[ind+2] = String(mComputedCRC,HEX)[1];
   output_array[ind+3] = '\r';
   output_array[ind+5] = '\n';
-  // SerialUSB.print("Sending cmd: ");
-  // SerialUSB.write(output_array);
-  // SerialUSB.println();
+
+
   serial_port_->write(output_array,sizeof(output_array));
 }
-
-// void Camera::calculateDelayTicksAndCompensate(
-//     const unsigned long &last_exposure_time_us) {
-//   // The goal here is to shift the time of the next camera trigger half the
-//   // exposure time before the mid-exposure time.
-//
-//   // The next frame should be triggered by this time before the mid-exposure
-//   // time (in CPU ticks).
-//   if (last_exposure_time_us == 0 ||
-//       last_exposure_time_us >= max_exposure_time_us_) {
-//     // In this case, something with the measurement went wrong or the camera
-//     // is dropping triggers due to a too high exposure time (constrain the
-//     // maximal exposure time of your camera to be within the period time of
-//     // your triggering). Switch to non-compensating mode.
-//     exposure_delay_ticks_ = 0;
-//     compensating_ = false;
-//   } else {
-//     exposure_delay_ticks_ = static_cast<double>(last_exposure_time_us) / 2.0 /
-//                             1000000.0 * cpu_freq_prescaler_;
-//     compensating_ = true;
-//   }
-//
-//   // Reset the compare register of the timer.
-//   timer_.setCompare(compare_ - exposure_delay_ticks_);
-// }

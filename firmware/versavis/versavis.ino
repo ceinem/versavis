@@ -21,6 +21,7 @@
 #include <Camera.h>
 #include <Timer.h>
 #include <helper.h>
+#include <Uart.h>
 
 static void resetCb(const std_msgs::Bool & /*msg*/) { NVIC_SystemReset(); }
 
@@ -68,6 +69,11 @@ Camera cam1(&nh, CAM1_TOPIC, CAM1_RATE, timer_cam1, CAM1_TYPE, CAM1_TRIGGER_PIN,
 Camera cam2(&nh, CAM2_TOPIC, CAM2_RATE, timer_cam2, CAM2_TYPE, CAM2_TRIGGER_PIN,
             CAM2_EXPOSURE_PIN, true);
 
+
+/* ----- UART ----- */
+Uart uart0(&nh, UART0_TOPIC, &UART0_PORT);
+Uart uart1(&nh, UART1_TOPIC, UART1_PORT);
+
 void setup() {
   DEBUG_INIT(115200);
 
@@ -106,6 +112,8 @@ void setup() {
   cam0.setup();
   cam1.setup();
   cam2.setup();
+  uart0.setup();
+  uart1.setup();
 
   /* ----- Initialize all connected cameras. ----- */
   while (!cam0.isInitialized() || !cam1.isInitialized() ||
@@ -174,6 +182,8 @@ void loop() {
   cam1.publish();
   cam2.publish();
   imu.publish();
+  uart0.publish();
+  uart1.publish()
 
 #ifndef DEBUG
   nh.spinOnce();

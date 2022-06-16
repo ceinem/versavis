@@ -40,6 +40,13 @@
 #define IMU_TOPIC "/versavis/imu_micro"
 #define IMU_RATE 200
 
+/* ----- UART -----*/
+#define UART0_TOPIC "/versavis/uart0"
+#define UART0_PORT Serial
+#define UART1_TOPIC ""
+#define UART1_PORT Serial1
+
+
 /* ----- Additional triggers ----- */
 // Define whether additional test outputs should be used.
 // #define ADD_TRIGGERS
